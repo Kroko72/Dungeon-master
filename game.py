@@ -1,5 +1,6 @@
 import pygame
 import os
+import math
 import sys
 
 
@@ -59,6 +60,28 @@ def start_screen():
         clock.tick(FPS)
 
 
+# Класс стрелы
+class Arrow(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, mouse_x, mouse_y):
+        super().__init__()
+        self.image = load_image("arrow.png")
+        self.rect = self.image.get_rect(center=(pos_x, pos_y))
+        self.x = mouse_x
+        self.y = mouse_y
+        self.speed = 5  # Начальная скорость
+        self.angle = math.atan2(pos_y-mouse_y, pos_x-mouse_x)   # Угол наклона
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+        self.angle_degree = math.degrees(self.angle)  # Угол наклона в градусах
+        #if self.angle_degree < 90:
+        print(self.angle_degree)
+        #self.image = pygame.transform.rotate(self.image, math.degrees(self.angle))
+
+    def update(self):
+        self.rect.x -= int(self.vel_x)
+        self.rect.y -= int(self.vel_y)
+
+
 # Инициализация пайгейма
 pygame.init()
 
@@ -93,11 +116,7 @@ arrow_group = pygame.sprite.Group()
 # Запуск начального окна
 start_screen()
 
-# Загрузка музыки и её воспроизведение
-# pygame.mixer.music.load("data/game.ogg")
-# pygame.mixer.music.set_volume(0.3)
-# pygame.mixer.music.play(-1)
-
+# Задний фон игры
 bg = load_image("1.png")
 
 # Главный игровой цикл
@@ -107,6 +126,10 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                x, y = pygame.mouse.get_pos()
+                arrow_group.add(Arrow(sprite.rect.x, sprite.rect.y, x, y))
 
     # Перемещение персонажа
     keys = pygame.key.get_pressed()
@@ -125,5 +148,7 @@ while running:
 
     screen.blit(bg, (0, 0))
     all_sprites.draw(screen)
+    arrow_group.draw(screen)
+    arrow_group.update()
     pygame.display.flip()
     clock.tick(FPS)
