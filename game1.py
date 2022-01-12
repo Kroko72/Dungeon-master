@@ -170,8 +170,73 @@ sprite.imageB4 = pygame.transform.scale(sprite.imageB4, (45, 59))
 sprite.imageB5 = load_image('24.png', -1)
 sprite.imageB5 = pygame.transform.scale(sprite.imageB5, (45, 63))
 
-sprite.stopPlayer = load_image('2.png', -1)
+# спрайт стоящего на месте игрока
+sprite.stopPlayer = load_image('01.png', -1)
 sprite.stopPlayer = pygame.transform.scale(sprite.stopPlayer, (45, 61))
+
+# спрайт идущего вверх налево
+sprite.imageFL1 = load_image('6.png', -1)
+sprite.imageFL1 = pygame.transform.scale(sprite.imageFL1, (45, 61))
+
+sprite.imageFL2 = load_image('61.png', -1)
+sprite.imageFL2 = pygame.transform.scale(sprite.imageFL2, (45, 61))
+
+sprite.imageFL3 = load_image('62.png', -1)
+sprite.imageFL3 = pygame.transform.scale(sprite.imageFL3, (45, 61))
+
+sprite.imageFL4 = load_image('63.png', -1)
+sprite.imageFL4 = pygame.transform.scale(sprite.imageFL4, (45, 61))
+
+sprite.imageFL5 = load_image('64.png', -1)
+sprite.imageFL5 = pygame.transform.scale(sprite.imageFL5, (45, 61))
+
+# спрайт идущего вверх направо
+sprite.imageFR1 = load_image('5.png', -1)
+sprite.imageFR1 = pygame.transform.scale(sprite.imageFR1, (45, 61))
+
+sprite.imageFR2 = load_image('51.png', -1)
+sprite.imageFR2 = pygame.transform.scale(sprite.imageFR2, (45, 61))
+
+sprite.imageFR3 = load_image('52.png', -1)
+sprite.imageFR3 = pygame.transform.scale(sprite.imageFR3, (45, 61))
+
+sprite.imageFR4 = load_image('53.png', -1)
+sprite.imageFR4 = pygame.transform.scale(sprite.imageFR4, (45, 61))
+
+sprite.imageFR5 = load_image('54.png', -1)
+sprite.imageFR5 = pygame.transform.scale(sprite.imageFR5, (45, 61))
+
+# спрайт идущего вниз налево
+sprite.imageBL1 = load_image('7.png', -1)
+sprite.imageBL1 = pygame.transform.scale(sprite.imageBL1, (45, 61))
+
+sprite.imageBL2 = load_image('71.png', -1)
+sprite.imageBL2 = pygame.transform.scale(sprite.imageBL2, (45, 61))
+
+sprite.imageBL3 = load_image('72.png', -1)
+sprite.imageBL3 = pygame.transform.scale(sprite.imageBL3, (45, 61))
+
+sprite.imageBL4 = load_image('73.png', -1)
+sprite.imageBL4 = pygame.transform.scale(sprite.imageBL4, (45, 61))
+
+sprite.imageBL5 = load_image('74.png', -1)
+sprite.imageBL5 = pygame.transform.scale(sprite.imageBL5, (45, 61))
+
+# спрайт идущего вниз направо
+sprite.imageBR1 = load_image('01.png', -1)
+sprite.imageBR1 = pygame.transform.scale(sprite.imageBR1, (45, 61))
+
+sprite.imageBR2 = load_image('12.png', -1)
+sprite.imageBR2 = pygame.transform.scale(sprite.imageBR2, (45, 61))
+
+sprite.imageBR3 = load_image('13.png', -1)
+sprite.imageBR3 = pygame.transform.scale(sprite.imageBR3, (45, 61))
+
+sprite.imageBR4 = load_image('14.png', -1)
+sprite.imageBR4 = pygame.transform.scale(sprite.imageBR4, (45, 61))
+
+sprite.imageBR5 = load_image('15.png', -1)
+sprite.imageBR5 = pygame.transform.scale(sprite.imageBR5, (45, 61))
 
 sprite.rect = sprite.image.get_rect()
 sprite.rect.x = 770
@@ -194,6 +259,10 @@ right = False
 left = False
 forward = False
 back = False
+fr = False
+fl = False
+br = False
+bl = False
 animCount = 0
 
 Right = [sprite.imageR1, sprite.imageR2, sprite.imageR3, sprite.imageR1, sprite.imageR4, sprite.imageR5]
@@ -203,6 +272,14 @@ Left = [sprite.imageL1, sprite.imageL2, sprite.imageL3, sprite.imageL1, sprite.i
 Forward = [sprite.imageF1, sprite.imageF2, sprite.imageF3, sprite.imageF1, sprite.imageF4, sprite.imageF5]
 
 Back = [sprite.imageB1, sprite.imageB2, sprite.imageB3, sprite.imageB1, sprite.imageB4, sprite.imageB5]
+
+FL = [sprite.imageFL1, sprite.imageFL2, sprite.imageFL3, sprite.imageFL1, sprite.imageFL4, sprite.imageFL5]
+
+FR = [sprite.imageFR1, sprite.imageFR2, sprite.imageFR3, sprite.imageFR1, sprite.imageFR4, sprite.imageFR5]
+
+BL = [sprite.imageBL1, sprite.imageBL2, sprite.imageBL3, sprite.imageBL1, sprite.imageBL4, sprite.imageBL5]
+
+BR = [sprite.imageBR1, sprite.imageBR2, sprite.imageBR3, sprite.imageBR1, sprite.imageBR4, sprite.imageBR5]
 
 
 # Функция отрисовки персонажа
@@ -224,6 +301,18 @@ def drawPlayer():
     elif back:
         screen.blit(Back[animCount // 12], (sprite.rect.x, sprite.rect.y))
         animCount += 1
+    elif fr:
+        screen.blit(FR[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif fl:
+        screen.blit(FL[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif bl:
+        screen.blit(BL[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif br:
+        screen.blit(BR[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
     else:
         screen.blit(sprite.stopPlayer, (sprite.rect.x, sprite.rect.y))
 
@@ -243,12 +332,64 @@ while running:
 
     # Перемещение персонажа
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_a]:
+    if keys[pygame.K_w] and keys[pygame.K_a]:
+        if sprite.rect.y > 30 and sprite.rect.x > 30:
+            sprite.rect.y -= hero_speed
+            sprite.rect.x -= hero_speed
+            left = False
+            right = False
+            forward = False
+            back = False
+            fr = False
+            fl = True
+            br = False
+            bl = False
+    elif keys[pygame.K_w] and keys[pygame.K_d]:
+        if sprite.rect.y > 30 and sprite.rect.x < 1465:
+            sprite.rect.y -= hero_speed
+            sprite.rect.x += hero_speed
+            left = False
+            right = False
+            forward = False
+            back = False
+            fr = True
+            fl = False
+            br = False
+            bl = False
+    elif keys[pygame.K_s] and keys[pygame.K_a]:
+        if sprite.rect.y < 720 and sprite.rect.x > 30:
+            sprite.rect.y += hero_speed
+            sprite.rect.x -= hero_speed
+            left = False
+            right = False
+            forward = False
+            back = False
+            fr = False
+            fl = False
+            br = False
+            bl = True
+    elif keys[pygame.K_s] and keys[pygame.K_d]:
+        if sprite.rect.y < 720 and sprite.rect.x < 1465:
+            sprite.rect.y += hero_speed
+            sprite.rect.x += hero_speed
+            left = False
+            right = False
+            forward = False
+            back = False
+            fr = False
+            fl = False
+            br = True
+            bl = False
+    elif keys[pygame.K_a]:
         if sprite.rect.x > 30:
             left = True
             right = False
             forward = False
             back = False
+            fr = False
+            fl = False
+            br = False
+            bl = False
             sprite.rect.x -= hero_speed
     elif keys[pygame.K_d]:
         if sprite.rect.x < 1465:
@@ -256,6 +397,10 @@ while running:
             right = True
             forward = False
             back = False
+            fr = False
+            fl = False
+            br = False
+            bl = False
             sprite.rect.x += hero_speed
     elif keys[pygame.K_w]:
         if sprite.rect.y > 30:
@@ -264,6 +409,10 @@ while running:
             right = False
             forward = True
             back = False
+            fr = False
+            fl = False
+            br = False
+            bl = False
     elif keys[pygame.K_s]:
         if sprite.rect.y < 720:
             sprite.rect.y += hero_speed
@@ -271,11 +420,19 @@ while running:
             right = False
             forward = False
             back = True
+            fr = False
+            fl = False
+            br = False
+            bl = False
     else:
         forward = False
         back = False
         left = False
         right = False
+        fr = False
+        fl = False
+        br = False
+        bl = False
         animCount = 0
 
     screen.blit(bg, (0, 0))
