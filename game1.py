@@ -1,7 +1,54 @@
-import pygame
-import os
 import math
+import os
 import sys
+import pygame
+
+
+# Функция определения направления движения персонажа
+def where_to_go(l=False, r=False, f=False, b=False, f1=False, f2=False, b1=False, b2=False):
+    global left, right, forward, back, fr, fl, br, bl
+    left = l
+    right = r
+    forward = f
+    back = b
+    fr = f1
+    fl = f2
+    br = b1
+    bl = b2
+
+
+# Функция отрисовки персонажа
+def draw_player():
+    global animCount
+    screen.blit(bg, (0, 0))
+    if animCount + 1 >= 60:
+        animCount = 0
+    if left:
+        screen.blit(Left[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif right:
+        screen.blit(Right[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif forward:
+        screen.blit(Forward[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif back:
+        screen.blit(Back[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif fr:
+        screen.blit(FR[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif fl:
+        screen.blit(FL[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif bl:
+        screen.blit(BL[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    elif br:
+        screen.blit(BR[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        animCount += 1
+    else:
+        screen.blit(sprite.stopPlayer, (sprite.rect.x, sprite.rect.y))
 
 
 # Функция закрытия
@@ -30,7 +77,7 @@ def load_image(name, colorkey=None):
 
 # Начальное окно
 def start_screen():
-    intro_text = []
+    intro_text = ["Ваш рекорд:", "", "лучшее время прохождения"]
 
     fon = pygame.transform.scale(load_image('fon.png'), (width, height))
     screen.blit(fon, (0, 0))
@@ -64,22 +111,54 @@ def start_screen():
 class Arrow(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, mouse_x, mouse_y):
         super().__init__()
-        self.image = load_image("arrow.png")
+        global angle
+        self.image = load_image("arrow.png", -1)
         self.rect = self.image.get_rect(center=(pos_x, pos_y))
-        self.x = mouse_x
-        self.y = mouse_y
-        self.speed = 5  # Начальная скорость
-        self.angle = math.atan2(pos_y - mouse_y, pos_x - mouse_x)  # Угол наклона
+        self.speed = 10  # Начальная скорость
+        self.angle = math.atan2(pos_y - mouse_y, pos_x - mouse_x)  # Угол наклона (направление стрелы)
         self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
         self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
-        self.angle_degree = math.degrees(self.angle)  # Угол наклона в градусах
-        # if self.angle_degree < 90:
-        print(self.angle_degree)
-        # self.image = pygame.transform.rotate(self.image, math.degrees(self.angle))
+
+        # Угол поворота картинки стрелы и её разворачивание в направлении её выпускания
+        rel_x, rel_y = mouse_x - pos_x, mouse_y - pos_y
+        angle = (180 / math.pi) * -math.atan2(rel_y, rel_x)
+        self.image = pygame.transform.rotate(self.image, angle)
 
     def update(self):
-        self.rect.x -= int(self.vel_x)
-        self.rect.y -= int(self.vel_y)
+        global old_arrow_x, old_arrow_y
+        if 40 < self.rect.x < 1500 and 40 < self.rect.y < 760:
+            if (self.rect.x - int(self.vel_x)) > 40 and (self.rect.y - int(self.vel_y)) > 40:
+                self.rect.x -= int(self.vel_x)
+                self.rect.y -= int(self.vel_y)
+        old_arrow_x, old_arrow_y = self.rect.x, self.rect.y
+
+
+# Класс стрелы, летящей назад
+class ArrowBack(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, old_x, old_y):
+        super().__init__()
+        global angle
+        self.image = load_image("arrow.png", -1)
+        self.rect = self.image.get_rect(center=(old_x, old_y))
+        self.speed = 10  # Начальная скорость
+        self.angle = math.atan2(pos_y - self.rect.y, pos_x - self.rect.x)  # Угол наклона
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+        self.image = pygame.transform.rotate(self.image, angle + 180)  # Разворот стрелы в противоположную сторону
+
+    def update(self):
+        global where_y, where_x, old_arrow_x, old_arrow_y
+        self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Угол наклона
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+        if self.rect.x < 1500 and self.rect.y < 760:
+            self.rect.x += int(self.vel_x)
+            self.rect.y += int(self.vel_y)
+        old_arrow_x, old_arrow_y = self.rect.x, self.rect.y
+
+        # Если стрела вернулась к игроку, она исчезает
+        if pygame.sprite.spritecollideany(self, all_sprites):
+            self.kill()
 
 
 # Инициализация пайгейма
@@ -238,6 +317,7 @@ sprite.imageBR4 = pygame.transform.scale(sprite.imageBR4, (45, 61))
 sprite.imageBR5 = load_image('15.png', -1)
 sprite.imageBR5 = pygame.transform.scale(sprite.imageBR5, (45, 61))
 
+# Размер спрайта, начальные координаты и скорость
 sprite.rect = sprite.image.get_rect()
 sprite.rect.x = 770
 sprite.rect.y = 660
@@ -254,7 +334,6 @@ start_screen()
 bg = load_image("1.png")
 
 # Переменные необходимые для анимации
-
 right = False
 left = False
 forward = False
@@ -265,70 +344,40 @@ br = False
 bl = False
 animCount = 0
 
+# Проверка на то, что стрела выпущена
+go_back = False
+
+# Списки с порядками картинок для анимации
 Right = [sprite.imageR1, sprite.imageR2, sprite.imageR3, sprite.imageR1, sprite.imageR4, sprite.imageR5]
-
 Left = [sprite.imageL1, sprite.imageL2, sprite.imageL3, sprite.imageL1, sprite.imageL4, sprite.imageL5]
-
 Forward = [sprite.imageF1, sprite.imageF2, sprite.imageF3, sprite.imageF1, sprite.imageF4, sprite.imageF5]
-
 Back = [sprite.imageB1, sprite.imageB2, sprite.imageB3, sprite.imageB1, sprite.imageB4, sprite.imageB5]
-
 FL = [sprite.imageFL1, sprite.imageFL2, sprite.imageFL3, sprite.imageFL1, sprite.imageFL4, sprite.imageFL5]
-
 FR = [sprite.imageFR1, sprite.imageFR2, sprite.imageFR3, sprite.imageFR1, sprite.imageFR4, sprite.imageFR5]
-
 BL = [sprite.imageBL1, sprite.imageBL2, sprite.imageBL3, sprite.imageBL1, sprite.imageBL4, sprite.imageBL5]
-
 BR = [sprite.imageBR1, sprite.imageBR2, sprite.imageBR3, sprite.imageBR1, sprite.imageBR4, sprite.imageBR5]
 
-
-# Функция отрисовки персонажа
-
-def drawPlayer():
-    global animCount
-    screen.blit(bg, (0, 0))
-    if animCount + 1 >= 60:
-        animCount = 0
-    if left:
-        screen.blit(Left[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif right:
-        screen.blit(Right[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif forward:
-        screen.blit(Forward[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif back:
-        screen.blit(Back[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif fr:
-        screen.blit(FR[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif fl:
-        screen.blit(FL[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif bl:
-        screen.blit(BL[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    elif br:
-        screen.blit(BR[animCount // 12], (sprite.rect.x, sprite.rect.y))
-        animCount += 1
-    else:
-        screen.blit(sprite.stopPlayer, (sprite.rect.x, sprite.rect.y))
-
-        # Главный игровой цикл
-
-
+# Главный игровой цикл
 while running:
     screen.fill((255, 255, 255))
-
+    where_x, where_y = sprite.rect.x, sprite.rect.y
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
+
+        # Выстреливание стрелы
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            # Если стрела не выпущена, то игрок может выстрелить
+            if event.button == 1 and len(arrow_group) == 0:
                 x, y = pygame.mouse.get_pos()
+                arrow_group = pygame.sprite.Group()
                 arrow_group.add(Arrow(sprite.rect.x, sprite.rect.y, x, y))
+                go_back = False
+            # Если стрела выпущена, то она притягивается к игроку
+            elif event.button == 3 and len(arrow_group) == 1:
+                arrow_group = pygame.sprite.Group()
+                arrow_group.add(ArrowBack(sprite.rect.x, sprite.rect.y, old_arrow_x, old_arrow_y))
+                go_back = True
 
     # Перемещение персонажа
     keys = pygame.key.get_pressed()
@@ -336,109 +385,50 @@ while running:
         if sprite.rect.y > 30 and sprite.rect.x > 30:
             sprite.rect.y -= hero_speed
             sprite.rect.x -= hero_speed
-            left = False
-            right = False
-            forward = False
-            back = False
-            fr = False
-            fl = True
-            br = False
-            bl = False
+            where_to_go(f2=True)
     elif keys[pygame.K_w] and keys[pygame.K_d]:
         if sprite.rect.y > 30 and sprite.rect.x < 1465:
             sprite.rect.y -= hero_speed
             sprite.rect.x += hero_speed
-            left = False
-            right = False
-            forward = False
-            back = False
-            fr = True
-            fl = False
-            br = False
-            bl = False
+            where_to_go(f1=True)
     elif keys[pygame.K_s] and keys[pygame.K_a]:
         if sprite.rect.y < 720 and sprite.rect.x > 30:
             sprite.rect.y += hero_speed
             sprite.rect.x -= hero_speed
-            left = False
-            right = False
-            forward = False
-            back = False
-            fr = False
-            fl = False
-            br = False
-            bl = True
+            where_to_go(b2=True)
     elif keys[pygame.K_s] and keys[pygame.K_d]:
         if sprite.rect.y < 720 and sprite.rect.x < 1465:
             sprite.rect.y += hero_speed
             sprite.rect.x += hero_speed
-            left = False
-            right = False
-            forward = False
-            back = False
-            fr = False
-            fl = False
-            br = True
-            bl = False
+            where_to_go(b1=True)
     elif keys[pygame.K_a]:
         if sprite.rect.x > 30:
-            left = True
-            right = False
-            forward = False
-            back = False
-            fr = False
-            fl = False
-            br = False
-            bl = False
             sprite.rect.x -= hero_speed
+            where_to_go(l=True)
     elif keys[pygame.K_d]:
         if sprite.rect.x < 1465:
-            left = False
-            right = True
-            forward = False
-            back = False
-            fr = False
-            fl = False
-            br = False
-            bl = False
             sprite.rect.x += hero_speed
+            where_to_go(r=True)
     elif keys[pygame.K_w]:
         if sprite.rect.y > 30:
             sprite.rect.y -= hero_speed
-            left = False
-            right = False
-            forward = True
-            back = False
-            fr = False
-            fl = False
-            br = False
-            bl = False
+            where_to_go(f=True)
     elif keys[pygame.K_s]:
         if sprite.rect.y < 720:
             sprite.rect.y += hero_speed
-            left = False
-            right = False
-            forward = False
-            back = True
-            fr = False
-            fl = False
-            br = False
-            bl = False
+            where_to_go(b=True)
     else:
-        forward = False
-        back = False
-        left = False
-        right = False
-        fr = False
-        fl = False
-        br = False
-        bl = False
+        where_to_go()
         animCount = 0
-
-    screen.blit(bg, (0, 0))
-    all_sprites.draw(screen)
-    drawPlayer()
-    arrow_group.draw(screen)
-    arrow_group.update()
-    pygame.display.flip()
-    clock.tick(FPS)
+    screen.blit(bg, (0, 0))  # Задний фон
+    all_sprites.draw(screen)  # Отрисовка героя
+    draw_player()  # Отрисовка анимации героя
+    arrow_group.draw(screen)  # Отрисовка стрела
+    # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
+    if go_back is True:
+        if pygame.mouse.get_pressed()[2]:
+            arrow_group.update()
+    else:
+        arrow_group.update()
+    pygame.display.flip()  # Обновление кадра
+    clock.tick(FPS)  # Ограничение частоты кадров
