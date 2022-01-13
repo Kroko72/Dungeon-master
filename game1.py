@@ -78,23 +78,20 @@ def load_image(name, colorkey=None):
 # Начальное окно
 def start_screen():
     intro_text = ["Ваш рекорд:", "", "лучшее время прохождения"]
-
     fon = pygame.transform.scale(load_image('fon.png'), (width, height))
-    screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 50
-    for line in intro_text:
-        string_rendered = font.render(line, True, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
-
-
     while True:
-        screen.blit(fon, (0, 0))
+        screen.blit(fon, (0, 0))  # Заполнение фона начального экрана
+        font = pygame.font.Font(None, 30)
+        text_coord = 50
+        # Текст рекорда на начальном экране
+        for line in intro_text:
+            string_rendered = font.render(line, True, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 10
+            text_coord += intro_rect.height
+            screen.blit(string_rendered, intro_rect)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -105,9 +102,10 @@ def start_screen():
                 # Проверка нажатия на кнопку EXIT
                 elif 640 < event.pos[0] < 933 and 394 < event.pos[1] < 469:
                     terminate()
-            if pygame.mouse.get_focused():
-                a, b = pygame.mouse.get_pos()
-                screen.blit(cursor, (a, b))
+        # Замена курсора
+        if pygame.mouse.get_focused():
+            a, b = pygame.mouse.get_pos()
+            screen.blit(cursor, (a, b))
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -440,6 +438,7 @@ while running:
             arrow_group.update()
     else:
         arrow_group.update()
+    # Замена курсора
     if pygame.mouse.get_focused():
         a, b = pygame.mouse.get_pos()
         screen.blit(cursor, (a, b))
