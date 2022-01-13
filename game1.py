@@ -92,7 +92,9 @@ def start_screen():
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
+
     while True:
+        screen.blit(fon, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -103,6 +105,9 @@ def start_screen():
                 # Проверка нажатия на кнопку EXIT
                 elif 640 < event.pos[0] < 933 and 394 < event.pos[1] < 469:
                     terminate()
+            if pygame.mouse.get_focused():
+                a, b = pygame.mouse.get_pos()
+                screen.blit(cursor, (a, b))
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -174,6 +179,7 @@ size = width, height = 1530, 790
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Dungeon Master')
 running = True
+pygame.mouse.set_visible(False)
 
 # Создание часов(ограничителя количества кадров)
 FPS = 60
@@ -317,6 +323,10 @@ sprite.imageBR4 = pygame.transform.scale(sprite.imageBR4, (45, 61))
 sprite.imageBR5 = load_image('15.png', -1)
 sprite.imageBR5 = pygame.transform.scale(sprite.imageBR5, (45, 61))
 
+# Загрузка фото курсора
+cursor = load_image("pricel1.png", -1)
+cursor = pygame.transform.scale(cursor, (20, 20))
+
 # Размер спрайта, начальные координаты и скорость
 sprite.rect = sprite.image.get_rect()
 sprite.rect.x = 770
@@ -430,5 +440,9 @@ while running:
             arrow_group.update()
     else:
         arrow_group.update()
+    if pygame.mouse.get_focused():
+        a, b = pygame.mouse.get_pos()
+        screen.blit(cursor, (a, b))
     pygame.display.flip()  # Обновление кадра
+    pygame.display.update()
     clock.tick(FPS)  # Ограничение частоты кадров
