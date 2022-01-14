@@ -2,6 +2,7 @@ import math
 import os
 import sys
 import pygame
+import time
 
 
 # Функция определения направления движения персонажа
@@ -164,6 +165,57 @@ class ArrowBack(pygame.sprite.Sprite):
             self.kill()
 
 
+# Класс босса рыцаря
+class Knight(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        global where_x, where_y
+        self.image = load_image("knight.png", -1)
+        self.speed = 2
+        self.can_kill = False  # Возможность убийства
+        self.must_wait = False  # Нужна ли задержка после рывка
+        self.dash_was = False  # Был ли рывок
+        self.much_wait = 0  # Задержка (в итерациях) после рывка
+        self.vel_x, self.vel_y = 0, 0
+        self.rect = self.image.get_rect(center=(800, 400))
+        self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Направление движения
+
+    def update(self):
+        global where_x, where_y
+        self.can_kill = False
+        # Раз в пять секунд рывок
+        if int(time.time() - seconds) % 5 == 0:
+            self.speed = 10
+            self.dash_was = False
+        else:
+            self.speed = 2
+            # Без рывка рыцарь двигается за главным героем и угол движения изменяется
+            self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Угол наклона
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+        if 50 < self.rect.x < 1500 and 50 < self.rect.y < 710 and self.must_wait is False:
+            if 50 < (self.rect.x + int(self.vel_x)) < 1500 and 50 < (self.rect.y + int(self.vel_y)) < 710:
+                self.rect.x += int(self.vel_x)
+                self.rect.y += int(self.vel_y)
+        # Задержка после рывка в итерациях
+        elif self.must_wait is True:
+            if self.much_wait == 30:
+                self.must_wait = False
+                self.much_wait = 0
+            else:
+                self.much_wait += 1
+                self.can_kill = True
+        # Проверка был ли рывок, и если рывок был, то задержка после него
+        if self.speed == 2 and self.dash_was is False:
+            self.must_wait = True
+            self.dash_was = True
+        # Убийство рыцаря
+        if self.can_kill is True:
+            if pygame.sprite.spritecollideany(self, arrow_group):
+                self.kill()
+                print('win')
+
+
 # Инициализация пайгейма
 pygame.init()
 
@@ -183,7 +235,7 @@ pygame.mouse.set_visible(False)
 FPS = 60
 clock = pygame.time.Clock()
 
-# Спрайт героя
+# Группа героя
 all_sprites = pygame.sprite.Group()
 sprite = pygame.sprite.Sprite()
 sprite.image = load_image("arrow.png", -1)
@@ -327,13 +379,20 @@ cursor = pygame.transform.scale(cursor, (20, 20))
 
 # Размер спрайта, начальные координаты и скорость
 sprite.rect = sprite.image.get_rect()
-sprite.rect.x = 770
-sprite.rect.y = 660
+where_x = sprite.rect.x = 770
+where_y = sprite.rect.y = 660
 hero_speed = 2
 all_sprites.add(sprite)
 
-# Спрайт стрелы
+# Группа стрелы
 arrow_group = pygame.sprite.Group()
+
+# Группа босса рыцаря
+knight_group = pygame.sprite.Group()
+knight_group.add(Knight())
+
+# Счётчик времени
+seconds = time.time()
 
 # Запуск начального окна
 start_screen()
@@ -428,10 +487,14 @@ while running:
     else:
         where_to_go()
         animCount = 0
+    # Если рыцарь задел героя, то игра проиграна
+    if pygame.sprite.spritecollideany(sprite, knight_group):
+        print("loss")
     screen.blit(bg, (0, 0))  # Задний фон
     all_sprites.draw(screen)  # Отрисовка героя
     draw_player()  # Отрисовка анимации героя
     arrow_group.draw(screen)  # Отрисовка стрела
+    knight_group.draw(screen)
     # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
     if go_back is True:
         if pygame.mouse.get_pressed()[2]:
@@ -442,6 +505,7 @@ while running:
     if pygame.mouse.get_focused():
         a, b = pygame.mouse.get_pos()
         screen.blit(cursor, (a, b))
+    knight_group.update()
     pygame.display.flip()  # Обновление кадра
     pygame.display.update()
     clock.tick(FPS)  # Ограничение частоты кадров
