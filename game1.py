@@ -411,6 +411,9 @@ br = False
 bl = False
 animCount = 0
 
+# Время последнего переката
+dash_time = 0
+
 # Проверка на то, что стрела выпущена
 go_back = False
 
@@ -426,6 +429,7 @@ BR = [sprite.imageBR1, sprite.imageBR2, sprite.imageBR3, sprite.imageBR1, sprite
 
 # Главный игровой цикл
 while running:
+    hero_speed = 2
     screen.fill((255, 255, 255))
     where_x, where_y = sprite.rect.x, sprite.rect.y
     for event in pygame.event.get():
@@ -445,6 +449,11 @@ while running:
                 arrow_group = pygame.sprite.Group()
                 arrow_group.add(ArrowBack(sprite.rect.x, sprite.rect.y, old_arrow_x, old_arrow_y))
                 go_back = True
+        # Перекат героя
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and (time.time() - dash_time) > 3:
+                dash_time = time.time()
+                hero_speed += 15
 
     # Перемещение персонажа
     keys = pygame.key.get_pressed()
@@ -489,7 +498,7 @@ while running:
         animCount = 0
     # Если рыцарь задел героя, то игра проиграна
     if pygame.sprite.spritecollideany(sprite, knight_group):
-        print("loss")
+        print("lose")
     screen.blit(bg, (0, 0))  # Задний фон
     all_sprites.draw(screen)  # Отрисовка героя
     draw_player()  # Отрисовка анимации героя
