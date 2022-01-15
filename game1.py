@@ -170,18 +170,64 @@ class Knight(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         global where_x, where_y
-        self.image = load_image("knight.png", -1)
+        # спрайты движения босса
+        self.knight1 = load_image('knight.png', -1)
+        self.knight2 = load_image('knight2.png', -1)
+        self.knight3 = load_image('knight3.png', -1)
+        self.knight4 = load_image('knight4.png', -1)
+        self.knight5 = load_image('knight5.png', -1)
+        self.knight6 = load_image('knight6.png', -1)
+        self.knightRight = [self.knight1, self.knight2, self.knight3, self.knight4, self.knight5, self.knight6]
+        # спрайты движения босса в другую сторону
+        self.knight7 = pygame.transform.flip(self.knight1, True, False)
+        self.knight8 = pygame.transform.flip(self.knight2, True, False)
+        self.knight9 = pygame.transform.flip(self.knight3, True, False)
+        self.knight10 = pygame.transform.flip(self.knight4, True, False)
+        self.knight11 = pygame.transform.flip(self.knight5, True, False)
+        self.knight12 = pygame.transform.flip(self.knight6, True, False)
+        self.knightLeft = [self.knight7, self.knight8, self.knight9, self.knight10, self.knight11, self.knight12]
+        # спрайты рывка босса
+        self.knight_attack1 = load_imag('knight_attack.png', -1)
+        self.knight_attack2 = load_image('knight_attack1.png', -1)
+        self.knight_attack3 = load_image('knight_attack2.png', -1)
+        self.knight_attack4 = load_image('knight_attack3.png', -1)
+        self.knight_attack5 = load_image('knight_attack4.png', -1)
+        self.knightattackR = [self.knight_attack1, self.knight_attack2, self.knight_attack3, self.knight_attack4,
+                             self.knight_attack5]
+        self.knight_attack6 = pygame.transform.flip(self.knight_attack1, True, False)
+        self.knight_attack7 = pygame.transform.flip(self.knight_attack2, True, False)
+        self.knight_attack8 = pygame.transform.flip(self.knight_attack3, True, False)
+        self.knight_attack9 = pygame.transform.flip(self.knight_attack4, True, False)
+        self.knight_attack10 = pygame.transform.flip(self.knight_attack5, True, False)
+        self.knightattackL = [self.knight_attack6, self.knight_attack7, self.knight_attack8, self.knight_attack8,
+                             self.knight_attack10]
+        # self.image = load_image("knight.png", -1)
         self.speed = 2
         self.can_kill = False  # Возможность убийства
         self.must_wait = False  # Нужна ли задержка после рывка
         self.dash_was = False  # Был ли рывок
         self.much_wait = 0  # Задержка (в итерациях) после рывка
+        self.animc = 0
+        self.right = False
+        self.left = False
         self.vel_x, self.vel_y = 0, 0
-        self.rect = self.image.get_rect(center=(800, 400))
+        self.rect = pygame.Rect(800, 400, 287, 283)
+        # self.rect = self.image.get_rect(center=(800, 400))
         self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Направление движения
 
     def update(self):
         global where_x, where_y
+        if self.animc + 1 >= 60:
+            self.animc = 0
+        self.animc += 1
+        if int(self.vel_x) > 0 and int(self.vel_x) > 0:
+            screen.blit(self.knightRight[self.animc // 12], (self.rect.x, self.rect.y))
+        elif int(self.vel_x) < 0 and int(self.vel_y) > 0:
+            screen.blit(self.knightLeft[self.animc // 12], (self.rect.x, self.rect.y))
+        elif int(self.vel_x) < 0 and int(self.vel_x) < 0:
+            screen.blit(self.knightLeft[self.animc // 12], (self.rect.x, self.rect.y))
+        elif int(self.vel_x) > 0 and int(self.vel_x) < 0:
+            screen.blit(self.knightRight[self.animc // 12], (self.rect.x, self.rect.y))
         self.can_kill = False
         # Раз в пять секунд рывок
         if int(time.time() - seconds) % 5 == 0:
@@ -197,6 +243,8 @@ class Knight(pygame.sprite.Sprite):
             if 50 < (self.rect.x + int(self.vel_x)) < 1500 and 50 < (self.rect.y + int(self.vel_y)) < 710:
                 self.rect.x += int(self.vel_x)
                 self.rect.y += int(self.vel_y)
+
+
         # Задержка после рывка в итерациях
         elif self.must_wait is True:
             if self.much_wait == 30:
@@ -503,7 +551,7 @@ while running:
     all_sprites.draw(screen)  # Отрисовка героя
     draw_player()  # Отрисовка анимации героя
     arrow_group.draw(screen)  # Отрисовка стрела
-    knight_group.draw(screen)
+    # knight_group.draw(screen)
     # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
     if go_back is True:
         if pygame.mouse.get_pressed()[2]:
