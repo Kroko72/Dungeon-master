@@ -21,32 +21,51 @@ def where_to_go(go_left=False, go_right=False, go_forward=False, go_back=False, 
 # Функция отрисовки персонажа
 def draw_player():
     global animCount, roll
-    screen.blit(bg, (0, 0))
     if animCount + 1 >= 73:
         animCount = 0
         roll = False
     elif left:
-        screen.blit(Left[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_Left[animCount // 12]
+        else:
+            sprite.image = Left[animCount // 12]
     elif right:
         if roll is True:
-            screen.blit(roll_Right[animCount // 12], (sprite.rect.x, sprite.rect.y))
+            sprite.image = roll_Right[animCount // 12]
         else:
-            screen.blit(Right[animCount // 12], (sprite.rect.x, sprite.rect.y))
+            sprite.image = Right[animCount // 12]
     elif forward:
-        screen.blit(Forward[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_Forward[animCount // 12]
+        else:
+            sprite.image = Forward[animCount // 12]
     elif back:
-        screen.blit(Back[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_Back[animCount // 12]
+        else:
+            sprite.image = Back[animCount // 12]
     elif forward_right:
-        screen.blit(FR[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_FR[animCount // 12]
+        else:
+            sprite.image = FR[animCount // 12]
     elif forward_left:
-        screen.blit(FL[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_FL[animCount // 12]
+        else:
+            sprite.image = FL[animCount // 12]
     elif back_left:
-        screen.blit(BL[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_BL[animCount // 12]
+        else:
+            sprite.image = BL[animCount // 12]
     elif back_right:
-        screen.blit(BR[animCount // 12], (sprite.rect.x, sprite.rect.y))
+        if roll is True:
+            sprite.image = roll_BR[animCount // 12]
+        else:
+            sprite.image = BR[animCount // 12]
     else:
-        screen.blit(sprite.stopPlayer, (sprite.rect.x, sprite.rect.y))
-    print(animCount // 12)
+        sprite.image = sprite.stopPlayer
     animCount += 1
 
 
@@ -281,14 +300,14 @@ sprite.imageR3 = pygame.transform.scale(load_image('42.png', -1), (50, 57))
 sprite.imageR4 = pygame.transform.scale(load_image('43.png', -1), (45, 57))
 sprite.imageR5 = pygame.transform.scale(load_image('44.png', -1), (50, 68))
 
-# Спрайт героя идущего вперед
+# Спрайт героя идущего вверх
 sprite.imageF1 = pygame.transform.scale(load_image('hero.png', -1), (45, 57))
 sprite.imageF2 = pygame.transform.scale(load_image('hero1.png', -1), (45, 57))
 sprite.imageF3 = pygame.transform.scale(load_image('hero2.png', -1), (45, 63))
 sprite.imageF4 = pygame.transform.scale(load_image('hero3.png', -1), (45, 62))
 sprite.imageF5 = pygame.transform.scale(load_image('hero4.png', -1), (45, 68))
 
-# Спрайт героя идущего назад
+# Спрайт героя идущего вниз
 sprite.imageB1 = pygame.transform.scale(load_image('2.png', -1), (45, 61))
 sprite.imageB2 = pygame.transform.scale(load_image('21.png', -1), (45, 66))
 sprite.imageB3 = pygame.transform.scale(load_image('22.png', -1), (45, 63))
@@ -334,6 +353,62 @@ sprite.image_dash04 = pygame.transform.scale(load_image('dash_04.png', -1), (45,
 sprite.image_dash05 = pygame.transform.scale(load_image('dash_05.png', -1), (45, 61))
 sprite.image_dash06 = pygame.transform.scale(load_image('dash_06.png', -1), (45, 61))
 
+# спрайт перекатываюшегося вверх
+sprite.image_dash10 = pygame.transform.scale(load_image('dash_10.png', -1), (45, 61))
+sprite.image_dash11 = pygame.transform.scale(load_image('dash_11.png', -1), (45, 61))
+sprite.image_dash12 = pygame.transform.scale(load_image('dash_12.png', -1), (45, 61))
+sprite.image_dash13 = pygame.transform.scale(load_image('dash_13.png', -1), (45, 61))
+sprite.image_dash14 = pygame.transform.scale(load_image('dash_14.png', -1), (45, 61))
+sprite.image_dash15 = pygame.transform.scale(load_image('dash_15.png', -1), (45, 61))
+
+# спрайт перекатываюшегося влево
+sprite.image_dash20 = pygame.transform.scale(load_image('dash_20.png', -1), (45, 61))
+sprite.image_dash21 = pygame.transform.scale(load_image('dash_21.png', -1), (45, 61))
+sprite.image_dash22 = pygame.transform.scale(load_image('dash_22.png', -1), (45, 61))
+sprite.image_dash23 = pygame.transform.scale(load_image('dash_23.png', -1), (45, 61))
+sprite.image_dash24 = pygame.transform.scale(load_image('dash_24.png', -1), (45, 61))
+sprite.image_dash25 = pygame.transform.scale(load_image('dash_25.png', -1), (45, 61))
+
+# спрайт перекатываюшегося вниз
+sprite.image_dash30 = pygame.transform.scale(load_image('dash_30.png', -1), (45, 61))
+sprite.image_dash31 = pygame.transform.scale(load_image('dash_31.png', -1), (45, 61))
+sprite.image_dash32 = pygame.transform.scale(load_image('dash_32.png', -1), (45, 61))
+sprite.image_dash33 = pygame.transform.scale(load_image('dash_33.png', -1), (45, 61))
+sprite.image_dash34 = pygame.transform.scale(load_image('dash_34.png', -1), (45, 61))
+sprite.image_dash35 = pygame.transform.scale(load_image('dash_35.png', -1), (45, 61))
+
+# спрайт перекатываюшегося вниз направо
+sprite.image_dash40 = pygame.transform.scale(load_image('dash_40.png', -1), (45, 61))
+sprite.image_dash41 = pygame.transform.scale(load_image('dash_41.png', -1), (45, 61))
+sprite.image_dash42 = pygame.transform.scale(load_image('dash_42.png', -1), (45, 61))
+sprite.image_dash43 = pygame.transform.scale(load_image('dash_43.png', -1), (45, 61))
+sprite.image_dash44 = pygame.transform.scale(load_image('dash_44.png', -1), (45, 61))
+sprite.image_dash45 = pygame.transform.scale(load_image('dash_45.png', -1), (45, 61))
+
+# спрайт перекатываюшегося вниз влево
+sprite.image_dash50 = pygame.transform.scale(load_image('dash_50.png', -1), (45, 61))
+sprite.image_dash51 = pygame.transform.scale(load_image('dash_51.png', -1), (45, 61))
+sprite.image_dash52 = pygame.transform.scale(load_image('dash_52.png', -1), (45, 61))
+sprite.image_dash53 = pygame.transform.scale(load_image('dash_53.png', -1), (45, 61))
+sprite.image_dash54 = pygame.transform.scale(load_image('dash_54.png', -1), (45, 61))
+sprite.image_dash55 = pygame.transform.scale(load_image('dash_55.png', -1), (45, 61))
+
+# спрайт перекатываюшегося вверх влево
+sprite.image_dash70 = pygame.transform.scale(load_image('dash_70.png', -1), (45, 61))
+sprite.image_dash71 = pygame.transform.scale(load_image('dash_71.png', -1), (45, 61))
+sprite.image_dash72 = pygame.transform.scale(load_image('dash_72.png', -1), (45, 61))
+sprite.image_dash73 = pygame.transform.scale(load_image('dash_73.png', -1), (45, 61))
+sprite.image_dash74 = pygame.transform.scale(load_image('dash_74.png', -1), (45, 61))
+sprite.image_dash75 = pygame.transform.scale(load_image('dash_75.png', -1), (45, 61))
+
+# спрайт перекатываюшегося вверх вправо
+sprite.image_dash80 = pygame.transform.scale(load_image('dash_80.png', -1), (45, 61))
+sprite.image_dash81 = pygame.transform.scale(load_image('dash_81.png', -1), (45, 61))
+sprite.image_dash82 = pygame.transform.scale(load_image('dash_82.png', -1), (45, 61))
+sprite.image_dash83 = pygame.transform.scale(load_image('dash_83.png', -1), (45, 61))
+sprite.image_dash84 = pygame.transform.scale(load_image('dash_84.png', -1), (45, 61))
+sprite.image_dash85 = pygame.transform.scale(load_image('dash_85.png', -1), (45, 61))
+
 
 # Загрузка фото курсора
 cursor = pygame.transform.scale(load_image("pricel1.png", -1), (20, 20))
@@ -375,6 +450,20 @@ go_back = False
 # Списки с порядками картинок для анимации
 roll_Right = [sprite.image_dash01, sprite.image_dash02, sprite.image_dash03, sprite.image_dash04,
               sprite.image_dash05, sprite.image_dash06]
+roll_Forward = [sprite.image_dash10, sprite.image_dash11, sprite.image_dash12, sprite.image_dash13,
+                sprite.image_dash14, sprite.image_dash15]
+roll_Left = [sprite.image_dash20, sprite.image_dash21, sprite.image_dash22, sprite.image_dash23,
+             sprite.image_dash24, sprite.image_dash25]
+roll_Back = [sprite.image_dash30, sprite.image_dash31, sprite.image_dash32, sprite.image_dash33,
+             sprite.image_dash34, sprite.image_dash35]
+roll_BR = [sprite.image_dash40, sprite.image_dash41, sprite.image_dash42, sprite.image_dash43,
+           sprite.image_dash44, sprite.image_dash45]
+roll_BL = [sprite.image_dash50, sprite.image_dash51, sprite.image_dash52, sprite.image_dash53,
+           sprite.image_dash54, sprite.image_dash55]
+roll_FL = [sprite.image_dash70, sprite.image_dash71, sprite.image_dash72, sprite.image_dash73,
+           sprite.image_dash74, sprite.image_dash75]
+roll_FR = [sprite.image_dash80, sprite.image_dash81, sprite.image_dash82, sprite.image_dash83,
+           sprite.image_dash84, sprite.image_dash85]
 Right = [sprite.imageR1, sprite.imageR2, sprite.imageR3, sprite.imageR1, sprite.imageR4, sprite.imageR5]
 Left = [sprite.imageL1, sprite.imageL2, sprite.imageL3, sprite.imageL1, sprite.imageL4, sprite.imageL5]
 Forward = [sprite.imageF1, sprite.imageF2, sprite.imageF3, sprite.imageF1, sprite.imageF4, sprite.imageF5]
@@ -387,8 +476,8 @@ BR = [sprite.imageBR1, sprite.imageBR2, sprite.imageBR3, sprite.imageBR1, sprite
 # Главный игровой цикл
 while running:
     hero_speed = 2
-    screen.fill((255, 255, 255))
     where_x, where_y = sprite.rect.x, sprite.rect.y  # Координаты главного героя
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
@@ -406,10 +495,11 @@ while running:
                 arrow_group = pygame.sprite.Group()
                 arrow_group.add(ArrowBack(sprite.rect.x, sprite.rect.y, old_arrow_x, old_arrow_y))
                 go_back = True
+
         # Перекат героя
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and (time.time() - dash_time) > 3:
-                dash_time = time.time()
+            if event.key == pygame.K_SPACE and (time.time() - dash_time) > 1:
+                dash_time = time.time()  # Время последнего переката
                 hero_speed += 70
                 roll = True
 
@@ -454,24 +544,26 @@ while running:
     else:
         where_to_go()
         animCount = 0
+
     # Если рыцарь задел героя, то игра проиграна
     if pygame.sprite.spritecollideany(sprite, knight_group):
         print("lose")
-    screen.blit(bg, (0, 0))  # Задний фон
-    all_sprites.draw(screen)  # Отрисовка героя
-    draw_player()  # Отрисовка анимации героя
-    arrow_group.draw(screen)  # Отрисовка стрела
-    knight_group.draw(screen)  # Отрисовка рыцаря
+
     # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
     if go_back is True:
         if pygame.mouse.get_pressed()[2]:
-            arrow_group.update()
+            arrow_group.update()  # Обновление стрелы
     else:
-        arrow_group.update()
+        arrow_group.update()  # Обновление стрелы
+
+    knight_group.update()  # Обновление рыцаря
+    screen.blit(bg, (0, 0))  # Задний фон
+    draw_player()  # Анимации героя (изменение его картинок)
+    all_sprites.draw(screen)  # Отрисовка героя
+    arrow_group.draw(screen)  # Отрисовка стрела
+    knight_group.draw(screen)  # Отрисовка рыцаря
     # Замена курсора
     if pygame.mouse.get_focused():
         screen.blit(cursor, pygame.mouse.get_pos())
-    knight_group.update()
     pygame.display.flip()  # Обновление кадра
-    pygame.display.update()
     clock.tick(FPS)  # Ограничение частоты кадров
