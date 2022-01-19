@@ -102,7 +102,7 @@ def draw_player():
 def pause():
     pause_time = time.time()  # Время начала паузы
     paused = True
-    print_text('Press enter to continue', 620, 385)  # Добавление текста на экран
+    print_text('Press Enter to continue or press R to restart', 580, 385)  # Добавление текста на экран
     while paused:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -111,6 +111,10 @@ def pause():
         # Проверка нажатия на кнопку ENTER (продолжение игры)
         if keys[pygame.K_RETURN]:
             paused = False
+        # Если нажата R, то рестарт
+        elif keys[pygame.K_r]:
+            restart_level()
+            return attempt_start_time * -1  # Чтобы время стало отрицательным
         pygame.display.update()
         clock.tick(15)
     pause_time = time.time() - pause_time
@@ -139,6 +143,19 @@ def load_image(name, colorkey=None):
     else:
         image = image.convert_alpha()
     return image
+
+
+# Функция рестарта
+def restart_level():
+    global where_x, where_y, arrow_group, knight_group, attempt_start_time
+    # Обновление координат
+    where_x = sprite.rect.x = 770
+    where_y = sprite.rect.y = 660
+    # Создание босса заново
+    knight_group = pygame.sprite.Group()
+    knight_group.add(Knight())
+    attempt_start_time = time.time()  # Обнуление времени
+    arrow_group = pygame.sprite.Group()  # Обновление стрел
 
 
 # Начальное окно
@@ -242,7 +259,7 @@ class Knight(pygame.sprite.Sprite):
         self.dash_was = False  # Был ли рывок
         self.much_wait = 0  # Задержка (в итерациях) после рывка
         self.vel_x, self.vel_y = 0, 0
-        self.rect = self.image.get_rect(center=(800, 200))
+        self.rect = self.image.get_rect(center=(800, 170))
         self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Направление движения
 
     def update(self):
@@ -273,8 +290,8 @@ class Knight(pygame.sprite.Sprite):
         # Если рыцарь идёт влево, то его картинка отражается
         if self.vel_x < 0:
             self.image = pygame.transform.flip(self.image, True, False)
-        if 50 < self.rect.x < 1500 and 50 < self.rect.y < 710 and self.must_wait is False:
-            if 50 < (self.rect.x + int(self.vel_x)) < 1500 and 50 < (self.rect.y + int(self.vel_y)) < 710:
+        if 50 < self.rect.x < 1500 and 10 < self.rect.y < 730 and self.must_wait is False:
+            if 50 < (self.rect.x + int(self.vel_x)) < 1500 and 50 < (self.rect.y + int(self.vel_y)) < 730:
                 self.rect.x += int(self.vel_x)
                 self.rect.y += int(self.vel_y)
         # Задержка после рывка в итерациях
@@ -449,7 +466,7 @@ sprite.image_dash85 = pygame.transform.scale(load_image('dash_85.png', -1), (45,
 
 
 # Загрузка фото курсора
-cursor = pygame.transform.scale(load_image("pricel1.png", -1), (20, 20))
+cursor = pygame.transform.scale(load_image("pricel1.png", (255, 174, 201)), (20, 20))
 
 # Размер спрайта игрока, начальные координаты и скорость
 sprite.rect = sprite.image.get_rect()
@@ -592,6 +609,8 @@ while running:
     # Если нажат ESCAPE - пауза
     if keys[pygame.K_ESCAPE]:
         attempt_start_time += int(pause())  # Время затраченное на паузу не идёт в счёт времени затраченного на попытку
+        if attempt_start_time < 0:  # Если был рестарт, то время сбрасывается
+            attempt_start_time = time.time()
 
     # Если рыцарь задел героя, то игра проиграна
     if pygame.sprite.spritecollideany(sprite, knight_group):
