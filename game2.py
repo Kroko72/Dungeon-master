@@ -37,9 +37,13 @@ def lose_screen():
             if event.type == pygame.QUIT:
                 terminate()
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Проверка нажатия на кнопку Try again
+                if 632 < event.pos[0] < 947 and 364 < event.pos[1] < 440:
+                    restart_level()  # Перезапуск уровня
+                    return attempt_start_time * -1  # Сброс времени
                 # Проверка нажатия на кнопку EXIT
-                if 640 < event.pos[0] < 933 and 394 < event.pos[1] < 469:
-                    terminate()
+                elif 634 < event.pos[0] < 938 and 475 < event.pos[1] < 557:
+                    terminate()  # Окончание работы
         # Замена курсора
         if pygame.mouse.get_focused():
             screen.blit(cursor, pygame.mouse.get_pos())
@@ -147,13 +151,16 @@ def load_image(name, colorkey=None):
 
 # Функция рестарта
 def restart_level():
-    global where_x, where_y, arrow_group, knight_group, attempt_start_time
+    global where_x, where_y, arrow_group, boss_group, attempt_start_time, animCount, roll
     # Обновление координат
     where_x = sprite.rect.x = 770
     where_y = sprite.rect.y = 660
     # Создание босса заново
-    knight_group = pygame.sprite.Group()
-    knight_group.add(Knight())
+    boss_group = pygame.sprite.Group()
+    boss_group.add(Knight())
+    # Обновление анимации
+    animCount = 0
+    roll = False
     attempt_start_time = time.time()  # Обнуление времени
     arrow_group = pygame.sprite.Group()  # Обновление стрел
 
@@ -466,7 +473,7 @@ sprite.image_dash85 = pygame.transform.scale(load_image('dash_85.png', -1), (45,
 
 
 # Загрузка фото курсора
-cursor = pygame.transform.scale(load_image("pricel1.png", (255, 174, 201)), (20, 20))
+cursor = pygame.transform.scale(load_image("pricel1.png"), (20, 20))
 
 # Размер спрайта игрока, начальные координаты и скорость
 sprite.rect = sprite.image.get_rect()
@@ -481,9 +488,9 @@ arrow_group = pygame.sprite.Group()
 # Запуск начального окна
 start_screen()
 
-# Группа босса рыцаря
-knight_group = pygame.sprite.Group()
-knight_group.add(Knight())
+# Группа босса
+boss_group = pygame.sprite.Group()
+boss_group.add(Knight())
 
 # Счётчик времени
 seconds = time.time()
@@ -613,7 +620,7 @@ while running:
             attempt_start_time = time.time()
 
     # Если рыцарь задел героя, то игра проиграна
-    if pygame.sprite.spritecollideany(sprite, knight_group):
+    if pygame.sprite.spritecollideany(sprite, boss_group):
         lose_screen()  # Запуск экрана проигрыша
 
     # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
@@ -623,13 +630,13 @@ while running:
     else:
         arrow_group.update()  # Обновление стрелы
 
-    knight_group.update()  # Обновление рыцаря
+    boss_group.update()  # Обновление босса
     screen.blit(bg, (0, 0))  # Задний фон
     print_text(attempt_time, 10, 10)  # Время попытки
     draw_player()  # Анимации героя (изменение его картинок)
     all_sprites.draw(screen)  # Отрисовка героя
     arrow_group.draw(screen)  # Отрисовка стрела
-    knight_group.draw(screen)  # Отрисовка рыцаря
+    boss_group.draw(screen)  # Отрисовка босса
     # Замена курсора
     if pygame.mouse.get_focused():
         screen.blit(cursor, pygame.mouse.get_pos())
