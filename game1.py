@@ -3,6 +3,14 @@ import os
 import sys
 import pygame
 import time
+import datetime
+
+
+# Функция добавления текста на экран
+def print_text(message, xx, yy, font_color=(255, 255, 255), font_type=None, font_size=30):
+    font_type = pygame.font.Font(font_type, font_size)  # Шрифт
+    text = font_type.render(message, True, font_color)  # Текст
+    screen.blit(text, (xx, yy))  # Добавление на экран
 
 
 # Функция определения направления движения персонажа
@@ -18,12 +26,38 @@ def where_to_go(go_left=False, go_right=False, go_forward=False, go_back=False, 
     back_left = b2
 
 
+# Функция проигрыша (смерти героя)
+def lose_screen():
+    global attempt_time  # Время попытки из главного цикла
+    fon = pygame.transform.scale(load_image('lose_screen.png'), (width, height))  # Фон
+    while True:
+        screen.blit(fon, (0, 0))  # Заполнение фона начального экрана
+        print_text(f'Время вашей попытки: {attempt_time}', 5, 7)  # Текст с временем попытки
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Проверка нажатия на кнопку EXIT
+                if 640 < event.pos[0] < 933 and 394 < event.pos[1] < 469:
+                    terminate()
+        # Замена курсора
+        if pygame.mouse.get_focused():
+            screen.blit(cursor, pygame.mouse.get_pos())
+        pygame.display.flip()
+        clock.tick(FPS)
+
+ww = False
 # Функция отрисовки персонажа
 def draw_player():
-    global animCount, roll
-    if animCount + 1 >= 73:
+    global animCount, roll, ww
+    if animCount + 1 >= 73 and ww is False:
         animCount = 0
         roll = False
+    elif animCount + 1 >= 130:
+        animCount = 0
+    if ww:
+        print(1)
+        sprite.image = Win[animCount // 12]
     elif left:
         if roll is True:
             sprite.image = roll_Left[animCount // 12]
@@ -69,6 +103,33 @@ def draw_player():
     animCount += 1
 
 
+# Функция паузы
+def pause():
+    pause_time = time.time()  # Время начала паузы
+    paused = True
+    print_text('Press enter to continue', 620, 385)  # Добавление текста на экран
+    image_pause = load_image('pause.png')
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Проверка нажатия на кнопку EXIT
+                if 540 < event.pos[0] < 933 and 494 < event.pos[1] < 569:
+                    terminate()
+        keys = pygame.key.get_pressed()
+        # Проверка нажатия на кнопку ENTER (продолжение игры)
+        if keys[pygame.K_RETURN]:
+            paused = False
+        if pygame.mouse.get_focused():
+            screen.blit(cursor, pygame.mouse.get_pos())
+            pygame.display.update()
+        screen.blit(image_pause, (450, 200))
+        clock.tick(60)
+    pause_time = time.time() - pause_time
+    return pause_time  # Возвращение времени (в секундах), затраченного на паузу
+
+
 # Функция закрытия
 def terminate():
     pygame.quit()
@@ -95,21 +156,11 @@ def load_image(name, colorkey=None):
 
 # Начальное окно
 def start_screen():
-    intro_text = ["Ваш рекорд:", "", "лучшее время прохождения"]
+    best_time = "10"  # Лучшее время прохождения
     fon = pygame.transform.scale(load_image('fon.png'), (width, height))
     while True:
-        screen.blit(fon, (0, 0))  # Заполнение фона начального экрана
-        font = pygame.font.Font(None, 30)
-        text_coord = 50
-        # Текст рекорда на начальном экране
-        for line in intro_text:
-            string_rendered = font.render(line, True, pygame.Color('white'))
-            intro_rect = string_rendered.get_rect()
-            text_coord += 10
-            intro_rect.top = text_coord
-            intro_rect.x = 10
-            text_coord += intro_rect.height
-            screen.blit(string_rendered, intro_rect)
+        screen.blit(fon, (0, 0))
+        print_text(f'Ваш рекорд: {best_time}', 5, 7)  # Добавление лучшего времени прохождения на экран
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -132,7 +183,7 @@ class Arrow(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, mouse_x, mouse_y):
         super().__init__()
         global angle
-        self.image = load_image("arrow.png", -1)
+        self.image = load_image("arrow.png", -1)  # Картинка стрелы
         self.rect = self.image.get_rect(center=(pos_x, pos_y))
         self.speed = 10  # Начальная скорость
         self.angle = math.atan2(pos_y - mouse_y, pos_x - mouse_x)  # Угол наклона (направление стрелы)
@@ -208,13 +259,13 @@ class Knight(pygame.sprite.Sprite):
         self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Направление движения
 
     def update(self):
-        global where_x, where_y
-        self.can_kill = False
+        global where_x, where_y, ww
+        self.can_kill = False  # Статус возможности убить босса героем
         self.image = self.animation_images[self.animation_count // 12]  # Анимация ходьбы
         if self.animation_count + 1 == 73:
-            self.animation_count = 0
+            self.animation_count = 0  # Начало анимации заново
         else:
-            self.animation_count += 1
+            self.animation_count += 1  # Смена картинок анимации
         # Раз в пять секунд рывок
         if int(time.time() - seconds) % 5 == 0:
             self.speed = 10
@@ -255,30 +306,9 @@ class Knight(pygame.sprite.Sprite):
         # Убийство рыцаря
         if self.can_kill is True:
             if pygame.sprite.spritecollideany(self, arrow_group):
+                ww = True
                 self.kill()
                 print('win')
-
-
-def print_text(message, xx, yy, font_color=(255, 255, 255), font_type='data/21154.otf', font_size=30):
-    font_type = pygame.font.Font(font_type, font_size)
-    text = font_type.render(message, True, font_color)
-    screen.blit(text, (xx, yy))
-
-
-def pause():
-    paused = True
-    while paused:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-
-        print_text('Press enter to continue', 620, 385)
-
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RETURN]:
-            paused = False
-        pygame.display.update()
-        clock.tick(15)
 
 
 # Инициализация пайгейма
@@ -307,6 +337,21 @@ roll = False
 all_sprites = pygame.sprite.Group()
 sprite = pygame.sprite.Sprite()
 sprite.image = pygame.transform.scale(load_image("hero.png", -1), (45, 65))
+
+# Спрайт танцов
+
+sprite.imagew1 = pygame.transform.scale(load_image('win.png', -1), (45, 65))
+sprite.imagew2 = pygame.transform.scale(load_image('win1.png', -1), (45, 65))
+sprite.imagew3 = pygame.transform.scale(load_image('win2.png', -1), (45, 57))
+sprite.imagew4 = pygame.transform.scale(load_image('win3.png', -1), (45, 68))
+sprite.imagew5 = pygame.transform.scale(load_image('win4.png', -1), (45, 65))
+sprite.imagew6 = pygame.transform.scale(load_image('win5.png', -1), (45, 65))
+sprite.imagew7 = pygame.transform.scale(load_image('win6.png', -1), (45, 65))
+sprite.imagew8 = pygame.transform.scale(load_image('win7.png', -1), (45, 57))
+sprite.imagew9 = pygame.transform.scale(load_image('win8.png', -1), (45, 68))
+sprite.imagew10 = pygame.transform.scale(load_image('win9.png', -1), (45, 65))
+sprite.imagew11 = pygame.transform.scale(load_image('win10.png', -1), (45, 65))
+
 
 # Спрайт героя идущего налево
 sprite.imageL1 = pygame.transform.scale(load_image('3.png', -1), (45, 65))
@@ -444,6 +489,9 @@ all_sprites.add(sprite)
 # Группа стрелы
 arrow_group = pygame.sprite.Group()
 
+# Запуск начального окна
+start_screen()
+
 # Группа босса рыцаря
 knight_group = pygame.sprite.Group()
 knight_group.add(Knight())
@@ -451,8 +499,8 @@ knight_group.add(Knight())
 # Счётчик времени
 seconds = time.time()
 
-# Запуск начального окна
-start_screen()
+# Время начала прохождения
+attempt_start_time = time.time()
 
 # Задний фон игры
 bg = load_image("1.png")
@@ -493,15 +541,21 @@ FL = [sprite.imageFL1, sprite.imageFL2, sprite.imageFL3, sprite.imageFL1, sprite
 FR = [sprite.imageFR1, sprite.imageFR2, sprite.imageFR3, sprite.imageFR1, sprite.imageFR4, sprite.imageFR5]
 BL = [sprite.imageBL1, sprite.imageBL2, sprite.imageBL3, sprite.imageBL1, sprite.imageBL4, sprite.imageBL5]
 BR = [sprite.imageBR1, sprite.imageBR2, sprite.imageBR3, sprite.imageBR1, sprite.imageBR4, sprite.imageBR5]
+Win = [sprite.imagew1, sprite.imagew2, sprite.imagew3, sprite.imagew4, sprite.imagew5, sprite.imagew6, sprite.imagew7,
+       sprite.imagew8, sprite.imagew9, sprite.imagew10, sprite.imagew11]
 
 # Главный игровой цикл
 while running:
-    hero_speed = 2
+    attempt_time = int(time.time() - attempt_start_time)  # Время попытки
+    attempt_time = str(datetime.timedelta(seconds=attempt_time))  # Время попытки в часах, минутах и секундах
+
+    hero_speed = 2  # Скорость персонажа
     where_x, where_y = sprite.rect.x, sprite.rect.y  # Координаты главного героя
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
+
         # Выстреливание стрелы
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Если стрела не выпущена, то игрок может выстрелить
@@ -561,16 +615,17 @@ while running:
         if sprite.rect.y < 720:
             sprite.rect.y += hero_speed
             where_to_go(go_back=True)
-    else:
+    elif ww is False:
         where_to_go()
         animCount = 0
 
+    # Если нажат ESCAPE - пауза
     if keys[pygame.K_ESCAPE]:
-        pause()
+        attempt_start_time += int(pause())  # Время затраченное на паузу не идёт в счёт времени затраченного на попытку
 
     # Если рыцарь задел героя, то игра проиграна
     if pygame.sprite.spritecollideany(sprite, knight_group):
-        print("lose")
+        lose_screen()  # Запуск экрана проигрыша
 
     # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
     if go_back is True:
@@ -581,6 +636,7 @@ while running:
 
     knight_group.update()  # Обновление рыцаря
     screen.blit(bg, (0, 0))  # Задний фон
+    print_text(attempt_time, 10, 10)  # Время попытки
     draw_player()  # Анимации героя (изменение его картинок)
     all_sprites.draw(screen)  # Отрисовка героя
     arrow_group.draw(screen)  # Отрисовка стрела
