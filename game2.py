@@ -14,12 +14,12 @@ def print_text(message, xx, yy, font_color=(255, 255, 255), font_type=None, font
 
 
 # Функция определения направления движения персонажа
-def where_to_go(go_left=False, go_right=False, go_forward=False, go_back=False, f1=False, f2=False, b1=False, b2=False):
+def where_to_go(go_left=False, go_right=False, go_forward=False, back1=False, f1=False, f2=False, b1=False, b2=False):
     global left, right, forward, back, forward_right, forward_left, back_right, back_left
     left = go_left
     right = go_right
     forward = go_forward
-    back = go_back
+    back = back1
     forward_right = f1
     forward_left = f2
     back_right = b1
@@ -53,45 +53,58 @@ def lose_screen():
 
 # Функция отрисовки персонажа
 def draw_player():
-    global animCount, roll
-    if animCount + 1 >= 73:
+    global animCount, roll, win_status
+    if animCount + 1 >= 73 and win_status is False:
         animCount = 0
         roll = False
+    elif animCount + 1 >= 130:  # В анимации танца больше картинок, поэтому счётчик до большего числа
+        animCount = 0
+    # Анимация танца
+    if win_status:
+        sprite.image = Win[animCount // 12]
+    # Анимация идущего или перекатывающегося влево
     elif left:
         if roll is True:
             sprite.image = roll_Left[animCount // 12]
         else:
             sprite.image = Left[animCount // 12]
+    # Анимация идущего или перекатывающегося вправо
     elif right:
         if roll is True:
             sprite.image = roll_Right[animCount // 12]
         else:
             sprite.image = Right[animCount // 12]
+    # Анимация идущего или перекатывающегося вверх
     elif forward:
         if roll is True:
             sprite.image = roll_Forward[animCount // 12]
         else:
             sprite.image = Forward[animCount // 12]
+    # Анимация идущего или перекатывающегося вниз
     elif back:
         if roll is True:
             sprite.image = roll_Back[animCount // 12]
         else:
             sprite.image = Back[animCount // 12]
+    # Анимация идущего или перекатывающегося вправо вверх
     elif forward_right:
         if roll is True:
             sprite.image = roll_FR[animCount // 12]
         else:
             sprite.image = FR[animCount // 12]
+    # Анимация идущего или перекатывающегося влево вверх
     elif forward_left:
         if roll is True:
             sprite.image = roll_FL[animCount // 12]
         else:
             sprite.image = FL[animCount // 12]
+    # Анимация идущего или перекатывающегося влево вниз
     elif back_left:
         if roll is True:
             sprite.image = roll_BL[animCount // 12]
         else:
             sprite.image = BL[animCount // 12]
+    # Анимация идущего или перекатывающегося вправо вниз
     elif back_right:
         if roll is True:
             sprite.image = roll_BR[animCount // 12]
@@ -151,13 +164,16 @@ def load_image(name, colorkey=None):
 
 # Функция рестарта
 def restart_level():
-    global where_x, where_y, arrow_group, boss_group, attempt_start_time, animCount, roll
+    global where_x, where_y, arrow_group, boss_group, attempt_start_time, animCount, roll, Level, Golem_attack_group
     # Обновление координат
     where_x = sprite.rect.x = 770
     where_y = sprite.rect.y = 660
     # Создание босса заново
-    boss_group = pygame.sprite.Group()
+    boss_group.empty()
     boss_group.add(Knight())
+    Golem_attack_group.empty()
+    Level = 1
+
     # Обновление анимации
     animCount = 0
     roll = False
@@ -233,13 +249,14 @@ class ArrowBack(pygame.sprite.Sprite):
         self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Угол наклона
         self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
         self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+
         if self.rect.x < 1500 and self.rect.y < 760:
             self.rect.x += int(self.vel_x)
             self.rect.y += int(self.vel_y)
         old_arrow_x, old_arrow_y = self.rect.x, self.rect.y
 
         # Если стрела вернулась к игроку, она исчезает
-        if pygame.sprite.spritecollideany(self, all_sprites):
+        if pygame.sprite.collide_mask(self, sprite):
             self.kill()
 
 
@@ -258,7 +275,7 @@ class Knight(pygame.sprite.Sprite):
         self.dash_animations = [load_image("knight_attack.png", -1), load_image("knight_attack1.png", -1),
                                 load_image("knight_attack2.png", -1), load_image("knight_attack3.png", -1),
                                 load_image("knight_attack4.png", -1)]
-        self.animation_count = 0  # Счётчик для смены изображений ходьбы
+        self.animation_count = 0  # Счётчик для смены изображений
         self.speed = 2
         self.dash_count = 0  # Счётчик для смены изображений рывка
         self.can_kill = False  # Возможность убийства
@@ -270,13 +287,15 @@ class Knight(pygame.sprite.Sprite):
         self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Направление движения
 
     def update(self):
-        global where_x, where_y
+        global where_x, where_y, win_status
+
         self.can_kill = False  # Статус возможности убить босса героем
         self.image = self.animation_images[self.animation_count // 12]  # Анимация ходьбы
         if self.animation_count + 1 == 73:
             self.animation_count = 0  # Начало анимации заново
         else:
             self.animation_count += 1  # Смена картинок анимации
+
         # Раз в пять секунд рывок
         if int(time.time() - seconds) % 5 == 0:
             self.speed = 10
@@ -288,12 +307,14 @@ class Knight(pygame.sprite.Sprite):
             else:
                 self.dash_count = 0
         else:
+            # Без рывка рыцарь двигается за главным героем и угол движения изменяется, а скорость становится обычной
             self.speed = 2
             self.dash_count = 0
-            # Без рывка рыцарь двигается за главным героем и угол движения изменяется
-            self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Угол наклона
+            self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Угол движения
+
         self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
         self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+
         # Если рыцарь идёт влево, то его картинка отражается
         if self.vel_x < 0:
             self.image = pygame.transform.flip(self.image, True, False)
@@ -301,6 +322,7 @@ class Knight(pygame.sprite.Sprite):
             if 50 < (self.rect.x + int(self.vel_x)) < 1500 and 50 < (self.rect.y + int(self.vel_y)) < 730:
                 self.rect.x += int(self.vel_x)
                 self.rect.y += int(self.vel_y)
+
         # Задержка после рывка в итерациях
         elif self.must_wait is True:
             if self.much_wait == 30:
@@ -310,15 +332,159 @@ class Knight(pygame.sprite.Sprite):
                 self.much_wait += 1
                 self.can_kill = True
             self.image = load_image("dead_knight1.png", -1)
+
         # Проверка был ли рывок, и если рывок был, то задержка после него
         if self.speed == 2 and self.dash_was is False:
             self.must_wait = True
             self.dash_was = True
+
         # Убийство рыцаря
         if self.can_kill is True:
             if pygame.sprite.spritecollideany(self, arrow_group):
+                win_status = True  # Анимация танца
                 self.kill()
-                print('win')
+
+        # Если босс задел героя, то игра проиграна
+        if pygame.sprite.collide_mask(sprite, self):
+            lose_screen()  # Запуск экрана проигрыша
+
+
+# Класс босса голема
+class Golem(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = load_image("golem.png", -1)
+        # Анимация ходьбы голема
+        self.animation_images = [pygame.transform.scale(load_image("golem.png", -1), (250, 238)),
+                                 pygame.transform.scale(load_image("golem1.png", -1), (250, 238)),
+                                 pygame.transform.scale(load_image("golem2.png", -1), (250, 238)),
+                                 pygame.transform.scale(load_image("golem3.png", -1), (250, 238))]
+        # Анимация стрельбы
+        self.shoot_images = [pygame.transform.scale(load_image("golem4.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem5.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem6.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem7.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem8.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem9.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem10.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem11.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem12.png", -1), (250, 238))]
+        # Анимация пульсации
+        self.pulse_images = [pygame.transform.scale(load_image("golem13.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem14.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem15.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem16.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem17.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem18.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem19.png", -1), (250, 238)),
+                             pygame.transform.scale(load_image("golem20.png", -1), (250, 238))]
+        self.pulse_time = time.time()  # Время последней пульсации, во время которой можно убить голема
+        self.pulse_count = 0  # Счётчик для анимации пульсации
+        # Анимация возможности убийства
+        self.can_kill_images = []
+        self.shoot_count = 0  # Счётчик для смены изображений стрельбы
+        self.animation_count = 0  # Счётчик для смены изображений
+        self.rect = self.image.get_rect(center=(800, 170))
+        self.vel_x, self.vel_y = 0, 0  # Скорость по оси x и оси y
+        self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Направление движения
+        self.speed = 1.5  # Скорость голема
+        self.shoot_iterations = 0  # Счётчик итераций для стрельбы
+
+    def update(self):
+        global win_status
+
+        # Раз в пять секунд пусьлация
+        if (time.time() - self.pulse_time) > 5:
+            self.pulse_time = time.time()
+            self.pulse_count += 1
+
+        # Анимация пульсации, во время которой голема можно убить
+        if self.pulse_count != 0:
+            self.image = self.pulse_images[self.pulse_count]  # Анимация пульсация
+            # Если во время пульсации попасть голему в глаз, то он умирает
+            if pygame.sprite.spritecollideany(self, arrow_group):
+                for i in arrow_group:
+                    if self.rect.x + 100 < i.rect.x < self.rect.x + 195 and self.rect.y < i.rect.y < self.rect.y + 150:
+                        win_status = True
+                        self.kill()
+            if self.pulse_count + 1 == 8:
+                self.pulse_count = 0
+            else:
+                self.pulse_count += 1
+
+        # Анимация стрельбы
+        elif self.shoot_count != 0:
+            self.image = self.shoot_images[self.shoot_count // 2]
+            if self.shoot_count + 1 == 18:
+                self.shoot_count = 0
+            else:
+                self.shoot_count += 1
+
+        # Анимация ходьбы
+        else:
+            self.image = self.animation_images[self.animation_count // 12]
+            if self.animation_count + 1 == 43:
+                self.animation_count = 0  # Начало анимации заново
+            else:
+                self.animation_count += 1  # Смена картинок анимации
+
+        # Раз в 50 итераций выстрел
+        if self.shoot_iterations == 50:
+            self.shoot_count += 1
+            # Смещенение снаряда голема если он идёт влево, чтобы выглядело так, что он стреляет из руки
+            if self.vel_x > 0:
+                Golem_attack_group.add(GolemAttack(where_x, where_y, self.rect.x + 270, self.rect.y))
+            else:
+                Golem_attack_group.add(GolemAttack(where_x, where_y, self.rect.x, self.rect.y))
+            self.shoot_iterations = 0
+        else:
+            self.shoot_iterations += 1
+
+        # Разворот картинки если голем идёт влево
+        if self.vel_x < 0:
+            self.image = pygame.transform.flip(self.image, True, False)
+
+        self.angle = math.atan2(where_y - self.rect.y, where_x - self.rect.x)  # Угол движения (направление)
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+
+        # Перемещение
+        self.rect.x += self.vel_x
+        self.rect.y += self.vel_y
+
+        # Если босс задел героя, то игра проиграна
+        if pygame.sprite.collide_mask(sprite, self):
+            lose_screen()  # Запуск экрана проигрыша
+
+
+# Класс снарядов голема
+class GolemAttack(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, old_x, old_y):
+        super().__init__()
+        self.image = pygame.transform.scale(load_image("golem_shoot.png", -1), (100, 40))
+        self.rect = self.image.get_rect(center=(old_x, old_y))
+        self.speed = 5  # Начальная скорость
+        self.angle = math.atan2(pos_y - self.rect.y, pos_x - self.rect.x)  # Угол наклона
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+
+        # Угол поворота картинки снаряда и разворачивание его в направлени выпускания
+        rel_x, rel_y = old_x - pos_x, old_y - pos_y
+        angle = (180 / math.pi) * -math.atan2(rel_y, rel_x)
+        self.image = pygame.transform.rotate(self.image, angle)
+
+    def update(self):
+        self.vel_x = math.cos(self.angle) * self.speed  # Скорость по иксу
+        self.vel_y = math.sin(self.angle) * self.speed  # Скорость по игрику
+        if self.rect.x < 1500 and self.rect.y < 760:
+            self.rect.x += int(self.vel_x)
+            self.rect.y += int(self.vel_y)
+        else:
+            self.kill()
+
+        # Если снаряд задел героя, то игра проиграна
+        if pygame.sprite.collide_mask(sprite, self):
+            lose_screen()  # Запуск экрана проигрыша
 
 
 # Инициализация пайгейма
@@ -328,6 +494,9 @@ pygame.init()
 pygame.mixer.music.load("data/menu.ogg")
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
+
+# Группа атак босса голема
+Golem_attack_group = pygame.sprite.Group()
 
 # Создание главного окна
 size = width, height = 1530, 790
@@ -340,13 +509,29 @@ pygame.mouse.set_visible(False)
 FPS = 60
 clock = pygame.time.Clock()
 
+# Уровень
+Level = 1
+
 # Состояние переката
 roll = False
 
 # Группа героя
-all_sprites = pygame.sprite.Group()
+hero_group = pygame.sprite.Group()
 sprite = pygame.sprite.Sprite()
 sprite.image = pygame.transform.scale(load_image("hero.png", -1), (45, 65))
+
+# Спрайт танцующего
+sprite.image_win1 = pygame.transform.scale(load_image('win.png', -1), (45, 65))
+sprite.image_win2 = pygame.transform.scale(load_image('win1.png', -1), (45, 65))
+sprite.image_win3 = pygame.transform.scale(load_image('win2.png', -1), (45, 57))
+sprite.image_win4 = pygame.transform.scale(load_image('win3.png', -1), (45, 68))
+sprite.image_win5 = pygame.transform.scale(load_image('win4.png', -1), (45, 65))
+sprite.image_win6 = pygame.transform.scale(load_image('win5.png', -1), (45, 65))
+sprite.image_win7 = pygame.transform.scale(load_image('win6.png', -1), (45, 65))
+sprite.image_win8 = pygame.transform.scale(load_image('win7.png', -1), (45, 57))
+sprite.image_win9 = pygame.transform.scale(load_image('win8.png', -1), (45, 68))
+sprite.image_win10 = pygame.transform.scale(load_image('win9.png', -1), (45, 65))
+sprite.image_win11 = pygame.transform.scale(load_image('win10.png', -1), (45, 65))
 
 # Спрайт героя идущего налево
 sprite.imageL1 = pygame.transform.scale(load_image('3.png', -1), (45, 65))
@@ -480,7 +665,7 @@ sprite.rect = sprite.image.get_rect()
 where_x = sprite.rect.x = 770
 where_y = sprite.rect.y = 660
 hero_speed = 2
-all_sprites.add(sprite)
+hero_group.add(sprite)
 
 # Группа стрелы
 arrow_group = pygame.sprite.Group()
@@ -505,6 +690,9 @@ bg = load_image("1.png")
 right, left, forward, back, forward_right, forward_left, back_right, back_left = False, False, False, False, False,\
                                                                                  False, False, False
 animCount = 0
+
+# Проверка на победу игрока
+win_status = False
 
 # Время последнего переката
 dash_time = 0
@@ -537,6 +725,8 @@ FL = [sprite.imageFL1, sprite.imageFL2, sprite.imageFL3, sprite.imageFL1, sprite
 FR = [sprite.imageFR1, sprite.imageFR2, sprite.imageFR3, sprite.imageFR1, sprite.imageFR4, sprite.imageFR5]
 BL = [sprite.imageBL1, sprite.imageBL2, sprite.imageBL3, sprite.imageBL1, sprite.imageBL4, sprite.imageBL5]
 BR = [sprite.imageBR1, sprite.imageBR2, sprite.imageBR3, sprite.imageBR1, sprite.imageBR4, sprite.imageBR5]
+Win = [sprite.image_win1, sprite.image_win2, sprite.image_win3, sprite.image_win4, sprite.image_win5, sprite.image_win6,
+       sprite.image_win7, sprite.image_win8, sprite.image_win9, sprite.image_win10, sprite.image_win11]
 
 # Главный игровой цикл
 while running:
@@ -608,8 +798,8 @@ while running:
     elif keys[pygame.K_s]:
         if sprite.rect.y < 720:
             sprite.rect.y += hero_speed
-            where_to_go(go_back=True)
-    else:
+            where_to_go(back1=True)
+    elif win_status is False:  # Если игрок не победил, то будет картинка стоящего на месте героя
         where_to_go()
         animCount = 0
 
@@ -618,10 +808,6 @@ while running:
         attempt_start_time += int(pause())  # Время затраченное на паузу не идёт в счёт времени затраченного на попытку
         if attempt_start_time < 0:  # Если был рестарт, то время сбрасывается
             attempt_start_time = time.time()
-
-    # Если рыцарь задел героя, то игра проиграна
-    if pygame.sprite.spritecollideany(sprite, boss_group):
-        lose_screen()  # Запуск экрана проигрыша
 
     # Если стрела выпущена, то она будет возвращаться только если зажата правая кнопка мыши
     if go_back is True:
@@ -634,11 +820,29 @@ while running:
     screen.blit(bg, (0, 0))  # Задний фон
     print_text(attempt_time, 10, 10)  # Время попытки
     draw_player()  # Анимации героя (изменение его картинок)
-    all_sprites.draw(screen)  # Отрисовка героя
+    hero_group.draw(screen)  # Отрисовка героя
     arrow_group.draw(screen)  # Отрисовка стрела
     boss_group.draw(screen)  # Отрисовка босса
+
+    if Level == 2:
+        Golem_attack_group.update()
+        Golem_attack_group.draw(screen)
+
     # Замена курсора
     if pygame.mouse.get_focused():
         screen.blit(cursor, pygame.mouse.get_pos())
+
+    # Окно перехода на следующий уровень
+    if win_status is True:
+        print_text('Нажмите Enter для перехода на следующий уровень', 580, 385)  # Добавление текста на экран
+        if keys[pygame.K_RETURN]:  # Проверка на нажатие кнопки Enter
+            boss_group.add(Golem())  # Добавление следующего басса
+            Level += 1
+
+            # Обновление координат
+            where_x = sprite.rect.x = 770
+            where_y = sprite.rect.y = 660
+            win_status = False
+
     pygame.display.flip()  # Обновление кадра
     clock.tick(FPS)  # Ограничение частоты кадров
